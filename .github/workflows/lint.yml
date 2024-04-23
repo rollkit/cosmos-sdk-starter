@@ -35,12 +35,6 @@ jobs:
           github-token: ${{ secrets.github_token }}
         if: env.GIT_DIFF
 
-  # hadolint lints the Dockerfile
-  hadolint:
-    uses: rollkit/.github/.github/workflows/reusable_dockerfile_lint.yml@v0.3.0 # yamllint disable-line rule:line-length
-    with:
-      dockerfile: test/docker/mockserv.Dockerfile
-
   yamllint:
     runs-on: ubuntu-latest
     steps:
@@ -52,32 +46,3 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: rollkit/.github/.github/actions/markdown-lint@v0.3.0
-
-  protobuf-lint:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v4
-      - run: make proto-gen
-      - run: make proto-lint
-
-  cli-docs-lint:
-    name: Lint CLI Docs
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: set up go
-        uses: actions/setup-go@v5
-        with:
-          go-version: ${{ inputs.go-version }}
-      - name: install rollkit cli
-        run: make install
-      - name: Generate Docs
-        run: rollkit docs-gen
-      - name: Verify no diff
-        run: |
-          DIFF=$(git diff)
-          if [[ -n "$DIFF" ]]; then
-            echo "$DIFF"
-            exit 1
-          fi
