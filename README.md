@@ -20,20 +20,20 @@ Provides a start command handler for rollkit which can be used by the cosmos-sdk
 * Navigate to `cmd/gmd/cmd/commands.go` under your `gm` project
 * Add following imports
 
-  ```
+  ```go
   rollserv "github.com/rollkit/cosmos-sdk-starter/server"
   rollconf "github.com/rollkit/rollkit/config"
   ```
 
 * Edit `initRootCmd` function to replace
 
-  ```
+  ```go
   server.AddCommands(rootCmd, app.DefaultNodeHome, newApp, appExport, addModuleInitFlags)
   ```
 
   to
 
-  ```
+  ```go
   server.AddCommandsWithStartCmdOptions(
   		rootCmd,
   		app.DefaultNodeHome,
