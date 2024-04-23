@@ -1,0 +1,40 @@
+# Tests / Code Coverage workflow
+# This workflow is triggered by ci_release.yml workflow
+name: Tests / Code Coverage
+on:
+  workflow_call:
+    inputs:
+      go-version:
+        description: "Go version to use"
+        type: string
+        required: true
+
+jobs:
+  go_mod_tidy_check:
+    name: Go Mod Tidy Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+      - run: go mod tidy
+      - name: check for diff
+        run: git diff --exit-code
+
+  unit_test:
+    name: Run Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: set up go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ inputs.go-version }}
+      - name: Run unit test
+        run: echo "No Tests"
+      # - name: upload coverage report
+      #   uses: codecov/codecov-action@v4.3.0
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     file: ./coverage.txt
