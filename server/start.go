@@ -130,7 +130,7 @@ func startInProcess[T sdktypes.Application](svrCtx *server.Context, svrCfg serve
 	}
 
 	if opts.PostSetup != nil {
-		if err := opts.PostSetup(svrCtx, clientCtx, ctx, g); err != nil {
+		if err := opts.PostSetup(svrCtx, clientCtx, ctx, g, app); err != nil {
 			return err
 		}
 	}
