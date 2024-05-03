@@ -3,7 +3,7 @@ module github.com/rollkit/cosmos-sdk-starter
 go 1.21.6
 
 require (
-	github.com/cometbft/cometbft v0.38.6
+	github.com/cometbft/cometbft v0.38.7
 	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/rollkit/rollkit v0.13.1
