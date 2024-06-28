@@ -40,7 +40,7 @@ const (
 )
 
 // StartHandler starts the Rollkit server with the provided application and options.
-func StartHandler[T sdktypes.Application](svrCtx *server.Context, clientCtx client.Context, appCreator sdktypes.AppCreator, inProcess bool, opts server.StartCmdOptions) error {
+func StartHandler[T sdktypes.Application](svrCtx *server.Context, clientCtx client.Context, appCreator sdktypes.AppCreator[T], inProcess bool, opts server.StartCmdOptions[T]) error {
 	svrCfg, err := getAndValidateConfig(svrCtx)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func StartHandler[T sdktypes.Application](svrCtx *server.Context, clientCtx clie
 	return startInProcess[T](svrCtx, svrCfg, clientCtx, app, metrics, opts)
 }
 
-func startApp[T sdktypes.Application](svrCtx *server.Context, appCreator sdktypes.AppCreator, opts server.StartCmdOptions) (app sdktypes.Application, cleanupFn func(), err error) {
+func startApp[T sdktypes.Application](svrCtx *server.Context, appCreator sdktypes.AppCreator[T], opts server.StartCmdOptions[T]) (app T, cleanupFn func(), err error) {
 	traceWriter, traceCleanupFn, err := setupTraceWriter(svrCtx)
 	if err != nil {
 		return app, traceCleanupFn, err
@@ -85,8 +85,8 @@ func startApp[T sdktypes.Application](svrCtx *server.Context, appCreator sdktype
 	return app, cleanupFn, nil
 }
 
-func startInProcess[T sdktypes.Application](svrCtx *server.Context, svrCfg serverconfig.Config, clientCtx client.Context, app sdktypes.Application,
-	metrics *telemetry.Metrics, opts server.StartCmdOptions,
+func startInProcess[T sdktypes.Application](svrCtx *server.Context, svrCfg serverconfig.Config, clientCtx client.Context, app T,
+	metrics *telemetry.Metrics, opts server.StartCmdOptions[T],
 ) error {
 	cmtCfg := svrCtx.Config
 	gRPCOnly := svrCtx.Viper.GetBool(flagGRPCOnly)
@@ -130,7 +130,7 @@ func startInProcess[T sdktypes.Application](svrCtx *server.Context, svrCfg serve
 	}
 
 	if opts.PostSetup != nil {
-		if err := opts.PostSetup(svrCtx, clientCtx, ctx, g); err != nil {
+		if err := opts.PostSetup(app, svrCtx, clientCtx, ctx, g); err != nil {
 			return err
 		}
 	}
