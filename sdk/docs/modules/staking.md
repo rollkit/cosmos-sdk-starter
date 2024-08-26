@@ -19,7 +19,8 @@ With these logic, staking module plays an important role in every cosmos applica
 - Work with government module on proposal tallying (via delegations management and valset management)
 - Work with slashing module on slashing/jailing misbehaved validators and their delegations.
 
-Rollkit is designed to use cosmos SDK for its application layer which naturally includes staking module. However, Rollkit doesn't have an actual valset or a consensus protocol which makes staking module loses its fundamental purpose. But we still shouldn't remove the staking module cause there're other modules dependant on the staking module offering useful functionalities (even for non-staking rollup) like goverment. For that reason, we decided to wrap the sdk staking module so we still keep internal functionality and apis of the module for compability, while at the same time override some parts of it to be suitable for rollkit.
+Rollkit is designed to use the Cosmos SDK for its application layer, which naturally includes the staking module. However, Rollkit doesn't have an actual valset or a consensus protocol, which makes the staking module lose its fundamental purpose. We still shouldn't remove the staking module because there are other modules dependent on it, offering useful functionalities (even for non-staking rollups) like government.
+For that reason, we decided to wrap the sdk staking module so we still keep internal functionality and apis of the module for compability, while at the same time override some parts of it to be suitable for rollkit.
 
 This means that the staking module now doesn't implement cosmos PoS, but rather a "pseudo-staking" protocol. Thus, staking validators no longer have its previous role of making blocks, they revert to only participating in goverment (governators). Staking module will not be able to make abci valset update.
 
