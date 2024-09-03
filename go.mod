@@ -8,7 +8,7 @@ require (
 	github.com/cometbft/cometbft v0.38.11
 	github.com/cosmos/cosmos-sdk v0.50.9
 	github.com/hashicorp/go-metrics v0.5.3
-	github.com/rollkit/rollkit v0.13.5
+	github.com/rollkit/rollkit v0.13.7
 	golang.org/x/sync v0.8.0
 	google.golang.org/grpc v1.66.0
 )
@@ -32,7 +32,7 @@ require (
 	github.com/benbjohnson/clock v1.3.5 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bgentry/speakeasy v0.1.1-0.20220910012023-760eaf8b6816 // indirect
-	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
+	github.com/btcsuite/btcd/btcec/v2 v2.3.3 // indirect
 	github.com/celestiaorg/go-header v0.6.2 // indirect
 	github.com/celestiaorg/go-libp2p-messenger v0.2.0 // indirect
 	github.com/celestiaorg/utils v0.1.0 // indirect
@@ -168,7 +168,7 @@ require (
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
-	github.com/multiformats/go-multiaddr v0.12.4 // indirect
+	github.com/multiformats/go-multiaddr v0.13.0 // indirect
 	github.com/multiformats/go-multiaddr-dns v0.3.1 // indirect
 	github.com/multiformats/go-multiaddr-fmt v0.1.0 // indirect
 	github.com/multiformats/go-multibase v0.2.0 // indirect
