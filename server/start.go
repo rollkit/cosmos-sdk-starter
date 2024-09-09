@@ -168,7 +168,7 @@ func startGrpcServer(
 	}
 
 	// if gRPC is enabled, configure gRPC client for gRPC gateway
-	grpcClient, err := grpc.Dial(
+	grpcClient, err := grpc.NewClient(
 		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithDefaultCallOptions(
@@ -347,7 +347,7 @@ func openTraceWriter(traceWriterFile string) (w io.WriteCloser, err error) {
 	if traceWriterFile == "" {
 		return
 	}
-	return os.OpenFile(
+	return os.OpenFile( //nolint:gosec
 		traceWriterFile,
 		os.O_WRONLY|os.O_APPEND|os.O_CREATE,
 		0o666,
