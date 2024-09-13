@@ -47,3 +47,6 @@ Provides a start command handler for rollkit which can be used by the cosmos-sdk
 
 * Build your `gm` chain using `ignite chain build`
 * Your `gm` app is now using Rollkit instead of Cometbft
+
+* For running the `gm` chain using Rollkit, it is important to add the Rollkit sequencer to `gm` app's `genesis.json` file. Follow instructions provided in the [adding rollkit sequencer to genesis](https://rollkit.dev/guides/create-genesis#_9-configuring-the-genesis-file)
+* Finally lauch app by passing rollkit flags: e.g., `gmd start --rollkit.aggregator --rpc.laddr tcp://127.0.0.1:36657 --grpc.address 127.0.0.1:9290 --p2p.laddr "0.0.0.0:36656" --minimum-gas-prices="0.025stake" --rollkit.da_address "http://localhost:7980"`
