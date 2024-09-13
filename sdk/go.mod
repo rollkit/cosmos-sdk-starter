@@ -12,11 +12,11 @@ require (
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/nft v0.1.0
 	cosmossdk.io/x/upgrade v0.1.0
-	github.com/cometbft/cometbft v0.38.7
+	github.com/cometbft/cometbft v0.38.8
 	github.com/cometbft/cometbft-db v0.9.1
 	github.com/cosmos/cosmos-sdk v0.50.6
 	github.com/spf13/cobra v1.8.1
-	google.golang.org/grpc v1.64.0
+	google.golang.org/grpc v1.64.1
 )
 
 require (
@@ -74,7 +74,7 @@ require (
 	github.com/gorilla/rpc v1.2.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
-	github.com/hashicorp/go-getter v1.7.1 // indirect
+	github.com/hashicorp/go-getter v1.7.5 // indirect
 	github.com/hashicorp/go-metrics v0.5.3 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
@@ -127,7 +127,7 @@ require (
 	github.com/multiformats/go-multistream v0.5.0 // indirect
 	github.com/multiformats/go-varint v0.0.7 // indirect
 	github.com/onsi/ginkgo/v2 v2.15.0 // indirect
-	github.com/opencontainers/runc v1.1.7 // indirect
+	github.com/opencontainers/runc v1.1.14 // indirect
 	github.com/opencontainers/runtime-spec v1.2.0 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 // indirect
