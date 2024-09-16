@@ -10,7 +10,7 @@ require (
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/rollkit/rollkit v0.13.7
 	golang.org/x/sync v0.8.0
-	google.golang.org/grpc v1.66.0
+	google.golang.org/grpc v1.66.2
 )
 
 require (
