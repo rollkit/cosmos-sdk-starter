@@ -29,7 +29,7 @@ lint: vet
 	@echo "--> Running golangci-lint"
 	@golangci-lint run
 	@echo "--> Running markdownlint"
-	@markdownlint --config .markdownlint.yaml --ignore './cmd/rollkit/docs/*.md' '**/*.md'
+	@markdownlint --config .markdownlint.yaml '**/*.md'
 	@echo "--> Running yamllint"
 	@yamllint --no-warnings . -c .yamllint.yml
 
@@ -38,7 +38,7 @@ lint: vet
 ## fmt: Run fixes for linters.
 fmt:
 	@echo "--> Formatting markdownlint"
-	@markdownlint --config .markdownlint.yaml --ignore './cmd/rollkit/docs/*.md' '**/*.md' -f
+	@markdownlint --config .markdownlint.yaml '**/*.md' -f
 	@echo "--> Formatting go"
 	@golangci-lint run --fix
 .PHONY: fmt
