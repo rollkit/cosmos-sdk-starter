@@ -13,14 +13,12 @@ This guide will teach you how to integrate RappDK to your cometBFT chain.
     ```go
     require (
     ...
-    github.com/rollkit/cosmos-sdk-starter/sdk
- v<VERSION>
+    github.com/rollkit/cosmos-sdk-starter/sdk vX.Y.Z
     ...
     )
     ```
 
     Use our fork rollkit version:
-
 
     ```go
     github.com/rollkit/rollkit => github.com/decentrio/rollkit v0.0.0-20240516071120-d40857416a55s
@@ -35,47 +33,38 @@ This guide will teach you how to integrate RappDK to your cometBFT chain.
     ```go
     import (
     ... 
-        rollkitstaking "github.com/rollkit/cosmos-sdk-starter/sdk
-/x/staking"
-        rollkitstakingkeeper "github.com/rollkit/cosmos-sdk-starter/sdk
-/x/staking/keeper"
+        rollkitstaking "github.com/rollkit/cosmos-sdk-starter/sdk/x/staking"
+        rollkitstakingkeeper "github.com/rollkit/cosmos-sdk-starter/sdk/x/staking/keeper"
     ...
     )
     ```
 
-2. Replace staking AppModule by RappDK staking
+1. Replace staking AppModule by RappDK staking
     In `app.ModuleManager` initial
     replace
 
     ```go
     staking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
-
     ```
 
     by
 
     ```go
     rollkitstaking.NewAppModule(appCodec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
-
     ```
 
-3. Replace Cosmos-SDK staking keeper by RappDK staking keeper
+1. Replace Cosmos-SDK staking keeper by RappDK staking keeper
     In `app.StakingKeeper` initial
     replace
 
     ```go
-    app.StakingKeeper = stakingkeeper.NewKeeper(
-
-  appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr), authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
-
+    app.StakingKeeper = stakingkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr), authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
     ```
 
     by
 
     ```go
-    app.StakingKeeper = rollkitstakingkeeper.NewKeeper(
-  appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr), authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
-
+    app.StakingKeeper = rollkitstakingkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[stakingtypes.StoreKey]), app.AccountKeeper, app.BankKeeper, authtypes.NewModuleAddress(govtypes.ModuleName).String(), authcodec.NewBech32Codec(sdk.Bech32PrefixValAddr), authcodec.NewBech32Codec(sdk.Bech32PrefixConsAddr))
     ```
 
 ## Configuring and adding sequencer module

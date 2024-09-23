@@ -4,7 +4,6 @@ parent: Instructions
 
 # Run the demo RappDK rollup
 
-
 ## Prerequisites
 
 - Go version >= 1.21

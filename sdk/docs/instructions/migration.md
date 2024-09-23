@@ -21,10 +21,10 @@ Before starting the migration process, make sure your chain have the following:
 
 - Integrate rollkit-sdk to your chain following [this guideline](./integration.md)
 
-- Integrate `RappDK` upgrade handler to your chain. Example upgrade handler could be found here [upgrade handler](https://github.com/rollkit/cosmos-sdk-starter/sdk
+- Integrate `RappDK` upgrade handler to your chain. Example upgrade handler could be found here [upgrade handler](<https://github.com/rollkit/cosmos-sdk-starter/tree/main/sdk>
 /blob/01103c74832314f77b3a9271d18c33d393bc0529/simapp/upgrade/upgrade.go#L28).
 
-**Notice: make sure you use correct sequencer pubkey address in your upgrade handler. You need to set the new sequencer pubkey manually in [your upgrade handler logic](https://github.com/rollkit/cosmos-sdk-starter/sdk
+**Notice: make sure you use correct sequencer pubkey address in your upgrade handler. You need to set the new sequencer pubkey manually in [your upgrade handler logic](<https://github.com/rollkit/cosmos-sdk-starter/tree/main/sdk>
 /blob/01103c74832314f77b3a9271d18c33d393bc0529/simapp/upgrade/upgrade.go#L30)**
 
 ### 2. Submit Upgrade proposal
@@ -35,7 +35,7 @@ Before starting the migration process, make sure your chain have the following:
 
 When the `upgrade_height` is reached, before run new binary, all node provider and validator need to migrate their node data by using this command:
 
-```
+```bash
 [app_name] rollup-migration --home [node_dir]
 ```
 
