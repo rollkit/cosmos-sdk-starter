@@ -213,7 +213,7 @@ require (
 	github.com/raulk/go-watchdog v1.3.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
-	github.com/rollkit/go-da v0.8.0 // indirect
+	github.com/rollkit/go-da v0.9.0 // indirect
 	github.com/rollkit/go-sequencing v0.4.0 // indirect
 	github.com/rs/cors v1.11.1 // indirect
 	github.com/rs/zerolog v1.32.0 // indirect
