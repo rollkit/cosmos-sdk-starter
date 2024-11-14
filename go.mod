@@ -8,7 +8,7 @@ require (
 	github.com/cometbft/cometbft v0.38.12
 	github.com/cosmos/cosmos-sdk v0.50.9
 	github.com/hashicorp/go-metrics v0.5.3
-	github.com/rollkit/rollkit v0.14.1-rc.1
+	github.com/rollkit/rollkit v0.14.1
 	golang.org/x/sync v0.8.0
 	google.golang.org/grpc v1.67.1
 )
