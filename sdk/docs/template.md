@@ -1,6 +1,6 @@
 # Default app template
 
-Here we have the [template](app.go) for a vanilla rollkit application using our rappdk. From this template, rollkit developers can begin to customize their own application by importing modules into the app.
+Here we have the template for a vanilla rollkit application using our rappdk. From this template, rollkit developers can begin to customize their own application by importing modules into the app.
 
 The reasonale behind this is that the typical cosmos-sdk app is designed for cosmos-PoS, meaning it has many redundant features for rollkit. Keeping these features makes the rollkit application confusing and unnecessary complicated.
 
