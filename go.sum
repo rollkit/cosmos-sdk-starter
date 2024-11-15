@@ -1599,8 +1599,8 @@ github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU
 github.com/rogpeppe/go-internal v1.12.0/go.mod h1:E+RYuTGaKKdloAfM02xzb0FW3Paa99yedzYV+kq4uf4=
 github.com/rollkit/go-da v0.9.0 h1:ECpS7RSLE84w61Y5a93RfaZrAZKeiyfjVwGxzjsW2cU=
 github.com/rollkit/go-da v0.9.0/go.mod h1:LQImomegjZ/dEQLKDJA7RdUnOLINSZJwI7q1CvFPWJw=
-github.com/rollkit/go-sequencing v0.4.0 h1:aYsHtaZKn/NPkHMtPMVkQoh6kAEr7UDQ5PC2gRttodU=
-github.com/rollkit/go-sequencing v0.4.0/go.mod h1:QnOk8mqyVgFWdMnjvZVBG4x8GC/TsRtoN5XdPZzfCSs=
+github.com/rollkit/go-sequencing v0.4.1 h1:P0x1wUFIAhdEeqUbrRAF343iExKhq9UkVOBbi45l750=
+github.com/rollkit/go-sequencing v0.4.1/go.mod h1:QnOk8mqyVgFWdMnjvZVBG4x8GC/TsRtoN5XdPZzfCSs=
 github.com/rollkit/rollkit v0.14.1 h1:YijAxNWa+Qy7u9EaFzRRX7lOU5bhKqZrzcJpoSn9Cps=
 github.com/rollkit/rollkit v0.14.1/go.mod h1:f9p7jooXjJYIndjXkaTU13jBGTlqk2Y2OL9UoxADY20=
 github.com/rs/cors v1.7.0/go.mod h1:gFx+x8UowdsKA9AchylcLynDq+nNFfI8FkUZdN/jGCU=
