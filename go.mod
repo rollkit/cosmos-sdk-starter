@@ -7,7 +7,7 @@ require (
 	github.com/cosmos/cosmos-sdk v0.50.10
 	github.com/hashicorp/go-metrics v0.5.3
 	github.com/rollkit/rollkit v0.14.1
-	golang.org/x/sync v0.8.0
+	golang.org/x/sync v0.9.0
 	google.golang.org/grpc v1.67.1
 )
 
