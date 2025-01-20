@@ -1,6 +1,6 @@
 module github.com/rollkit/cosmos-sdk-starter
 
-go 1.23.3
+go 1.22
 
 require (
 	github.com/cometbft/cometbft v0.38.15

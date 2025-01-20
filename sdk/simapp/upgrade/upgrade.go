@@ -25,10 +25,8 @@ var StoreUpgrades = storetypes.StoreUpgrades{
 	Deleted: []string{},
 }
 
-func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator, seqKeeper sequencerkeeper.Keeper, sk stakingkeeper.Keeper) upgradetypes.UpgradeHandler {
+func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator, seqKeeper sequencerkeeper.Keeper, sk stakingkeeper.Keeper, seqPk string) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		seqPubkey := "J3ZVpvQv18IveVGkRuW+Yog9R/7E4gTWLzWIRiOw9Zk="
-
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		// get last validator set
 		validatorSet, err := sk.GetLastValidators(ctx)
@@ -36,7 +34,7 @@ func CreateUpgradeHandler(mm *module.Manager, configurator module.Configurator, 
 			return nil, err
 		}
 
-		pubKey, err := GetSequencerEd25519Pubkey(seqPubkey)
+		pubKey, err := GetSequencerEd25519Pubkey(seqPk)
 		if err != nil {
 			return nil, err
 		}

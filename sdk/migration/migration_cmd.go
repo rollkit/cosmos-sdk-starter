@@ -1,6 +1,7 @@
 package migration
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -22,7 +23,7 @@ import (
 // MigrateToRollkitCmd returns a command that migrates the data from the comnettBFT chain to rollup
 func MigrateToRollkitCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rollup-migration ",
+		Use:   "rollup-migration",
 		Short: "Migrate the data from the comnettBFT chain to rollup",
 		Long:  "Migrate the data from the comnettBFT chain to rollup",
 		Args:  cobra.ExactArgs(0),
@@ -43,7 +44,7 @@ func MigrateToRollkitCmd() *cobra.Command {
 			}
 			height := cometBFTstate.LastBlockHeight
 			block := blockStore.LoadBlock(height)
-			rollkitCommit := rollkitCommitFromCometBFTCommit(*block.LastCommit)
+			// rollkitCommit := rollkitCommitFromCometBFTCommit(*block.LastCommit)
 
 			rollkitStore, err := loadRollkitStateStore(config.RootDir, config.DBPath)
 			if err != nil {
@@ -60,8 +61,63 @@ func MigrateToRollkitCmd() *cobra.Command {
 				return err
 			}
 
-			rollkitBlock := rollkitBlockFromCometBFTBlock(block, *block.LastCommit, rollkitState.Validators)
-			err = rollkitStore.SaveBlock(context.Background(), &rollkitBlock, &rollkitCommit)
+			// rollkitBlock := rollkitBlockFromCometBFTBlock(block, *block.LastCommit, rollkitState.Validators)
+
+			var (
+				header    *rollkittypes.SignedHeader
+				data      *rollkittypes.Data
+				signature rollkittypes.Signature
+			)
+
+			// find proposer signature
+			for _, sig := range block.LastCommit.Signatures {
+				if bytes.Equal(sig.ValidatorAddress.Bytes(), block.ProposerAddress.Bytes()) {
+					signature = rollkittypes.Signature(sig.Signature)
+					break
+				}
+			}
+
+			header = &rollkittypes.SignedHeader{
+				Header: rollkittypes.Header{
+					BaseHeader: rollkittypes.BaseHeader{
+						Height:  uint64(block.Height),
+						Time:    uint64(block.Time.UnixNano()),
+						ChainID: block.ChainID,
+					},
+					Version: rollkittypes.Version{
+						Block: block.Version.Block,
+						App:   block.Version.App,
+					},
+					LastHeaderHash:  block.LastCommitHash.Bytes(),
+					LastCommitHash:  block.LastCommitHash.Bytes(),
+					DataHash:        block.DataHash.Bytes(),
+					ConsensusHash:   block.ConsensusHash.Bytes(),
+					AppHash:         block.AppHash.Bytes(),
+					LastResultsHash: block.LastResultsHash.Bytes(),
+					ValidatorHash:   block.ValidatorsHash.Bytes(),
+					ProposerAddress: block.ProposerAddress.Bytes(),
+				},
+				Signature: signature, // TODO: figure out this.
+				Validators: &cometbfttypes.ValidatorSet{
+					Validators: cometBFTstate.Validators.Validators,
+					Proposer:   cometBFTstate.Validators.Proposer,
+				},
+			}
+
+			data = &rollkittypes.Data{
+				Metadata: &rollkittypes.Metadata{
+					ChainID:      block.ChainID,
+					Height:       uint64(block.Height),
+					Time:         uint64(block.Time.UnixNano()),
+					LastDataHash: block.DataHash.Bytes(),
+				},
+			}
+
+			for _, tx := range block.Data.Txs {
+				data.Txs = append(data.Txs, rollkittypes.Tx(tx))
+			}
+
+			err = rollkitStore.SaveBlockData(context.Background(), header, data, &signature)
 			if err != nil {
 				return err
 			}
@@ -136,34 +192,6 @@ func rollkitStateFromCometBFTState(cometBFTState state.State) (rollkittypes.Stat
 		LastValidators:              cometBFTState.LastValidators,
 		LastHeightValidatorsChanged: cometBFTState.LastHeightValidatorsChanged,
 	}, nil
-}
-
-func rollkitBlockFromCometBFTBlock(block *cometbfttypes.Block, commit cometbfttypes.Commit, validatorSet *cometbfttypes.ValidatorSet) rollkittypes.Block {
-	rollkitTxs := make([]rollkittypes.Tx, len(block.Data.Txs))
-	for i, tx := range block.Data.Txs {
-		rollkitTxs[i] = rollkittypes.Tx(tx)
-	}
-	return rollkittypes.Block{
-		SignedHeader: rollkittypes.SignedHeader{
-			Header:     rollkitHeaderFromCometBFTHeader(block.Header),
-			Commit:     rollkitCommitFromCometBFTCommit(commit),
-			Validators: validatorSet,
-		},
-		Data: rollkittypes.Data{
-			Txs: rollkitTxs,
-		},
-	}
-}
-
-func rollkitCommitFromCometBFTCommit(commit cometbfttypes.Commit) rollkittypes.Commit {
-	rollkitSigs := make([]rollkittypes.Signature, len(commit.Signatures))
-	for i, sig := range commit.Signatures {
-		rollkitSigs[i] = sig.Signature
-	}
-
-	return rollkittypes.Commit{
-		Signatures: rollkitSigs,
-	}
 }
 
 func rollkitHeaderFromCometBFTHeader(header cometbfttypes.Header) rollkittypes.Header {
