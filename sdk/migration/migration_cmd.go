@@ -1,15 +1,18 @@
 package migration
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
 	"path/filepath"
 
 	dbm "github.com/cometbft/cometbft-db"
+	abci "github.com/cometbft/cometbft/abci/types"
 	cometbftcmd "github.com/cometbft/cometbft/cmd/cometbft/commands"
 	cfg "github.com/cometbft/cometbft/config"
 	"github.com/cometbft/cometbft/libs/os"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/state"
 	"github.com/cometbft/cometbft/store"
 	cometbfttypes "github.com/cometbft/cometbft/types"
@@ -18,11 +21,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// TODO: testing
 // MigrateToRollkitCmd returns a command that migrates the data from the comnettBFT chain to rollup
 func MigrateToRollkitCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "rollup-migration ",
+		Use:   "rollup-migration",
 		Short: "Migrate the data from the comnettBFT chain to rollup",
 		Long:  "Migrate the data from the comnettBFT chain to rollup",
 		Args:  cobra.ExactArgs(0),
@@ -43,7 +45,6 @@ func MigrateToRollkitCmd() *cobra.Command {
 			}
 			height := cometBFTstate.LastBlockHeight
 			block := blockStore.LoadBlock(height)
-			rollkitCommit := rollkitCommitFromCometBFTCommit(*block.LastCommit)
 
 			rollkitStore, err := loadRollkitStateStore(config.RootDir, config.DBPath)
 			if err != nil {
@@ -60,10 +61,94 @@ func MigrateToRollkitCmd() *cobra.Command {
 				return err
 			}
 
-			rollkitBlock := rollkitBlockFromCometBFTBlock(block, *block.LastCommit, rollkitState.Validators)
-			err = rollkitStore.SaveBlock(context.Background(), &rollkitBlock, &rollkitCommit)
+			var (
+				header    *rollkittypes.SignedHeader
+				data      *rollkittypes.Data
+				signature rollkittypes.Signature
+			)
+
+			// find proposer signature
+			for _, sig := range block.LastCommit.Signatures {
+				if bytes.Equal(sig.ValidatorAddress.Bytes(), block.ProposerAddress.Bytes()) {
+					signature = rollkittypes.Signature(sig.Signature)
+					break
+				}
+			}
+
+			header = &rollkittypes.SignedHeader{
+				Header: rollkittypes.Header{
+					BaseHeader: rollkittypes.BaseHeader{
+						Height:  uint64(block.Height),
+						Time:    uint64(block.Time.UnixNano()),
+						ChainID: block.ChainID,
+					},
+					Version: rollkittypes.Version{
+						Block: block.Version.Block,
+						App:   block.Version.App,
+					},
+					LastHeaderHash:  block.LastCommitHash.Bytes(),
+					LastCommitHash:  block.LastCommitHash.Bytes(),
+					DataHash:        block.DataHash.Bytes(),
+					ConsensusHash:   block.ConsensusHash.Bytes(),
+					AppHash:         block.AppHash.Bytes(),
+					LastResultsHash: block.LastResultsHash.Bytes(),
+					ValidatorHash:   block.ValidatorsHash.Bytes(),
+					ProposerAddress: block.ProposerAddress.Bytes(),
+				},
+				Signature: signature, // TODO: figure out this.
+				Validators: &cometbfttypes.ValidatorSet{
+					Validators: cometBFTstate.Validators.Validators,
+					Proposer:   cometBFTstate.Validators.Proposer,
+				},
+			}
+
+			data = &rollkittypes.Data{
+				Metadata: &rollkittypes.Metadata{
+					ChainID:      block.ChainID,
+					Height:       uint64(block.Height),
+					Time:         uint64(block.Time.UnixNano()),
+					LastDataHash: block.DataHash.Bytes(),
+				},
+			}
+
+			for _, tx := range block.Data.Txs {
+				data.Txs = append(data.Txs, rollkittypes.Tx(tx))
+			}
+
+			err = rollkitStore.SaveBlockData(context.Background(), header, data, &signature)
 			if err != nil {
 				return err
+			}
+
+			// Only save extended commit info if vote extensions are enabled
+			if cometBFTstate.ConsensusParams.ABCI.VoteExtensionsEnabled(block.Height) {
+				extendedCommit := blockStore.LoadBlockExtendedCommit(height)
+
+				extendedCommitInfo := abci.ExtendedCommitInfo{
+					Round: extendedCommit.Round,
+				}
+
+				for _, vote := range extendedCommit.ToExtendedVoteSet("", cometBFTstate.LastValidators).List() {
+					power := int64(0)
+					for _, v := range cometBFTstate.LastValidators.Validators {
+						if bytes.Equal(v.Address.Bytes(), vote.ValidatorAddress) {
+							power = v.VotingPower
+							break
+						}
+					}
+
+					extendedCommitInfo.Votes = append(extendedCommitInfo.Votes, abci.ExtendedVoteInfo{
+						Validator: abci.Validator{
+							Address: vote.ValidatorAddress,
+							Power:   power,
+						},
+						VoteExtension:      vote.Extension,
+						ExtensionSignature: vote.ExtensionSignature,
+						BlockIdFlag:        cmtproto.BlockIDFlag(vote.CommitSig().BlockIDFlag),
+					})
+				}
+
+				rollkitStore.SaveExtendedCommit(context.Background(), header.Height(), &extendedCommitInfo)
 			}
 
 			log.Println("Migration completed successfully")
@@ -136,34 +221,6 @@ func rollkitStateFromCometBFTState(cometBFTState state.State) (rollkittypes.Stat
 		LastValidators:              cometBFTState.LastValidators,
 		LastHeightValidatorsChanged: cometBFTState.LastHeightValidatorsChanged,
 	}, nil
-}
-
-func rollkitBlockFromCometBFTBlock(block *cometbfttypes.Block, commit cometbfttypes.Commit, validatorSet *cometbfttypes.ValidatorSet) rollkittypes.Block {
-	rollkitTxs := make([]rollkittypes.Tx, len(block.Data.Txs))
-	for i, tx := range block.Data.Txs {
-		rollkitTxs[i] = rollkittypes.Tx(tx)
-	}
-	return rollkittypes.Block{
-		SignedHeader: rollkittypes.SignedHeader{
-			Header:     rollkitHeaderFromCometBFTHeader(block.Header),
-			Commit:     rollkitCommitFromCometBFTCommit(commit),
-			Validators: validatorSet,
-		},
-		Data: rollkittypes.Data{
-			Txs: rollkitTxs,
-		},
-	}
-}
-
-func rollkitCommitFromCometBFTCommit(commit cometbfttypes.Commit) rollkittypes.Commit {
-	rollkitSigs := make([]rollkittypes.Signature, len(commit.Signatures))
-	for i, sig := range commit.Signatures {
-		rollkitSigs[i] = sig.Signature
-	}
-
-	return rollkittypes.Commit{
-		Signatures: rollkitSigs,
-	}
 }
 
 func rollkitHeaderFromCometBFTHeader(header cometbfttypes.Header) rollkittypes.Header {
