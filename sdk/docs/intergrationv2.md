@@ -24,7 +24,7 @@ This guide will teach you how to integrate RappDK to your cometBFT chain using d
 
 In this step, you should add sequencer and wrapper staking  module to your `app.go` and `appconfig.go` like other normal module in cosmos-SDK.
 
-We have instruction here: <https://docs.cosmos.network/main/build/building-apps/app-go-v2>.
+We have instruction here: <https://docs.cosmos.network/v0.50/build/building-apps/app-go-v2>.
 
 1. Add upgrade handler
 
