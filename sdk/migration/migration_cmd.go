@@ -43,9 +43,8 @@ func MigrateToRollkitCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			height := cometBFTstate.LastBlockHeight
-			block := blockStore.LoadBlock(height)
 
+			lastBlockHeight := cometBFTstate.LastBlockHeight
 			rollkitStore, err := loadRollkitStateStore(config.RootDir, config.DBPath)
 			if err != nil {
 				return err
@@ -61,94 +60,45 @@ func MigrateToRollkitCmd() *cobra.Command {
 				return err
 			}
 
-			var (
-				header    *rollkittypes.SignedHeader
-				data      *rollkittypes.Data
-				signature rollkittypes.Signature
-			)
+			for height := lastBlockHeight; height > 0; height-- {
+				block := blockStore.LoadBlock(lastBlockHeight)
+				header, data, signature := cometBlockToRollkit(block, cometBFTstate)
 
-			// find proposer signature
-			for _, sig := range block.LastCommit.Signatures {
-				if bytes.Equal(sig.ValidatorAddress.Bytes(), block.ProposerAddress.Bytes()) {
-					signature = rollkittypes.Signature(sig.Signature)
-					break
-				}
-			}
-
-			header = &rollkittypes.SignedHeader{
-				Header: rollkittypes.Header{
-					BaseHeader: rollkittypes.BaseHeader{
-						Height:  uint64(block.Height),
-						Time:    uint64(block.Time.UnixNano()),
-						ChainID: block.ChainID,
-					},
-					Version: rollkittypes.Version{
-						Block: block.Version.Block,
-						App:   block.Version.App,
-					},
-					LastHeaderHash:  block.LastCommitHash.Bytes(),
-					LastCommitHash:  block.LastCommitHash.Bytes(),
-					DataHash:        block.DataHash.Bytes(),
-					ConsensusHash:   block.ConsensusHash.Bytes(),
-					AppHash:         block.AppHash.Bytes(),
-					LastResultsHash: block.LastResultsHash.Bytes(),
-					ValidatorHash:   block.ValidatorsHash.Bytes(),
-					ProposerAddress: block.ProposerAddress.Bytes(),
-				},
-				Signature: signature, // TODO: figure out this.
-				Validators: &cometbfttypes.ValidatorSet{
-					Validators: cometBFTstate.Validators.Validators,
-					Proposer:   cometBFTstate.Validators.Proposer,
-				},
-			}
-
-			data = &rollkittypes.Data{
-				Metadata: &rollkittypes.Metadata{
-					ChainID:      block.ChainID,
-					Height:       uint64(block.Height),
-					Time:         uint64(block.Time.UnixNano()),
-					LastDataHash: block.DataHash.Bytes(),
-				},
-			}
-
-			for _, tx := range block.Data.Txs {
-				data.Txs = append(data.Txs, rollkittypes.Tx(tx))
-			}
-
-			err = rollkitStore.SaveBlockData(context.Background(), header, data, &signature)
-			if err != nil {
-				return err
-			}
-
-			// Only save extended commit info if vote extensions are enabled
-			if cometBFTstate.ConsensusParams.ABCI.VoteExtensionsEnabled(block.Height) {
-				extendedCommit := blockStore.LoadBlockExtendedCommit(height)
-
-				extendedCommitInfo := abci.ExtendedCommitInfo{
-					Round: extendedCommit.Round,
+				err = rollkitStore.SaveBlockData(context.Background(), header, data, &signature)
+				if err != nil {
+					return err
 				}
 
-				for _, vote := range extendedCommit.ToExtendedVoteSet("", cometBFTstate.LastValidators).List() {
-					power := int64(0)
-					for _, v := range cometBFTstate.LastValidators.Validators {
-						if bytes.Equal(v.Address.Bytes(), vote.ValidatorAddress) {
-							power = v.VotingPower
-							break
-						}
+				// Only save extended commit info if vote extensions are enabled
+				if cometBFTstate.ConsensusParams.ABCI.VoteExtensionsEnabled(block.Height) {
+					extendedCommit := blockStore.LoadBlockExtendedCommit(lastBlockHeight)
+
+					extendedCommitInfo := abci.ExtendedCommitInfo{
+						Round: extendedCommit.Round,
 					}
 
-					extendedCommitInfo.Votes = append(extendedCommitInfo.Votes, abci.ExtendedVoteInfo{
-						Validator: abci.Validator{
-							Address: vote.ValidatorAddress,
-							Power:   power,
-						},
-						VoteExtension:      vote.Extension,
-						ExtensionSignature: vote.ExtensionSignature,
-						BlockIdFlag:        cmtproto.BlockIDFlag(vote.CommitSig().BlockIDFlag),
-					})
-				}
+					for _, vote := range extendedCommit.ToExtendedVoteSet("", cometBFTstate.LastValidators).List() {
+						power := int64(0)
+						for _, v := range cometBFTstate.LastValidators.Validators {
+							if bytes.Equal(v.Address.Bytes(), vote.ValidatorAddress) {
+								power = v.VotingPower
+								break
+							}
+						}
 
-				rollkitStore.SaveExtendedCommit(context.Background(), header.Height(), &extendedCommitInfo)
+						extendedCommitInfo.Votes = append(extendedCommitInfo.Votes, abci.ExtendedVoteInfo{
+							Validator: abci.Validator{
+								Address: vote.ValidatorAddress,
+								Power:   power,
+							},
+							VoteExtension:      vote.Extension,
+							ExtensionSignature: vote.ExtensionSignature,
+							BlockIdFlag:        cmtproto.BlockIDFlag(vote.CommitSig().BlockIDFlag),
+						})
+					}
+
+					rollkitStore.SaveExtendedCommit(context.Background(), header.Height(), &extendedCommitInfo)
+				}
 			}
 
 			log.Println("Migration completed successfully")
@@ -156,6 +106,64 @@ func MigrateToRollkitCmd() *cobra.Command {
 		},
 	}
 	return cmd
+}
+
+// cometBlockToRollkit converts a cometBFT block to a rollkit block
+func cometBlockToRollkit(block *cometbfttypes.Block, cometBFTstate state.State) (*rollkittypes.SignedHeader, *rollkittypes.Data, rollkittypes.Signature) {
+	var (
+		header    *rollkittypes.SignedHeader
+		data      *rollkittypes.Data
+		signature rollkittypes.Signature
+	)
+
+	// find proposer signature
+	for _, sig := range block.LastCommit.Signatures {
+		if bytes.Equal(sig.ValidatorAddress.Bytes(), block.ProposerAddress.Bytes()) {
+			signature = sig.Signature
+			break
+		}
+	}
+
+	header = &rollkittypes.SignedHeader{
+		Header: rollkittypes.Header{
+			BaseHeader: rollkittypes.BaseHeader{
+				Height:  uint64(block.Height),
+				Time:    uint64(block.Time.UnixNano()),
+				ChainID: block.ChainID,
+			},
+			Version: rollkittypes.Version{
+				Block: block.Version.Block,
+				App:   block.Version.App,
+			},
+			LastHeaderHash:  block.LastCommitHash.Bytes(),
+			LastCommitHash:  block.LastCommitHash.Bytes(),
+			DataHash:        block.DataHash.Bytes(),
+			ConsensusHash:   block.ConsensusHash.Bytes(),
+			AppHash:         block.AppHash.Bytes(),
+			LastResultsHash: block.LastResultsHash.Bytes(),
+			ValidatorHash:   block.ValidatorsHash.Bytes(),
+			ProposerAddress: block.ProposerAddress.Bytes(),
+		},
+		Signature: signature, // TODO: figure out this.
+		Validators: &cometbfttypes.ValidatorSet{
+			Validators: cometBFTstate.Validators.Validators,
+			Proposer:   cometBFTstate.Validators.Proposer,
+		},
+	}
+
+	data = &rollkittypes.Data{
+		Metadata: &rollkittypes.Metadata{
+			ChainID:      block.ChainID,
+			Height:       uint64(block.Height),
+			Time:         uint64(block.Time.UnixNano()),
+			LastDataHash: block.DataHash.Bytes(),
+		},
+	}
+
+	for _, tx := range block.Data.Txs {
+		data.Txs = append(data.Txs, rollkittypes.Tx(tx))
+	}
+	return header, data, signature
 }
 
 func loadStateAndBlockStore(config *cfg.Config) (*store.BlockStore, state.Store, error) {
@@ -203,7 +211,7 @@ func rollkitStateFromCometBFTState(cometBFTState state.State) (rollkittypes.Stat
 		Version: cometBFTState.Version,
 
 		ChainID:         cometBFTState.ChainID,
-		InitialHeight:   uint64(cometBFTState.InitialHeight),
+		InitialHeight:   uint64(cometBFTState.LastBlockHeight), // The initial height is the migration height
 		LastBlockHeight: uint64(cometBFTState.LastBlockHeight),
 		LastBlockID:     cometBFTState.LastBlockID,
 		LastBlockTime:   cometBFTState.LastBlockTime,
@@ -221,28 +229,4 @@ func rollkitStateFromCometBFTState(cometBFTState state.State) (rollkittypes.Stat
 		LastValidators:              cometBFTState.LastValidators,
 		LastHeightValidatorsChanged: cometBFTState.LastHeightValidatorsChanged,
 	}, nil
-}
-
-func rollkitHeaderFromCometBFTHeader(header cometbfttypes.Header) rollkittypes.Header {
-	return rollkittypes.Header{
-		BaseHeader: rollkittypes.BaseHeader{
-			ChainID: header.ChainID,
-			Height:  uint64(header.Height),
-			Time:    uint64(header.Time.Unix()),
-		},
-		Version: rollkittypes.Version{
-			Block: header.Version.Block,
-			App:   header.Version.App,
-		},
-		LastHeaderHash: header.ToProto().LastCommitHash,
-		DataHash:       header.ToProto().DataHash,
-		ConsensusHash:  header.ToProto().ConsensusHash,
-		AppHash:        header.ToProto().AppHash,
-
-		LastCommitHash:  header.ToProto().LastCommitHash,
-		LastResultsHash: header.ToProto().LastResultsHash,
-		ValidatorHash:   header.ToProto().ValidatorsHash,
-
-		ProposerAddress: header.ProposerAddress,
-	}
 }
