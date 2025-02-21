@@ -13,6 +13,10 @@ require (
 	google.golang.org/grpc v1.67.1
 )
 
+replace (
+	github.com/rollkit/rollkit => ./../../Rollkit/rollkit
+)
+
 require (
 	cosmossdk.io/api v0.7.5 // indirect
 	cosmossdk.io/collections v0.4.0 // indirect

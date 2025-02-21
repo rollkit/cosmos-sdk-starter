@@ -69,6 +69,18 @@ func MigrateToRollkitCmd() *cobra.Command {
 					return err
 				}
 
+				finalizeBlockResp, err := stateStore.LoadFinalizeBlockResponse(height)
+				if err != nil {
+					return err
+				}
+
+				err = rollkitStore.SaveBlockResponses(context.Background(), uint64(height), finalizeBlockResp)
+				if err != nil {
+					return err
+				}
+
+				fmt.Printf("Saved block responses for block: %d %+v\n", height, finalizeBlockResp)
+
 				// Only save extended commit info if vote extensions are enabled
 				if cometBFTstate.ConsensusParams.ABCI.VoteExtensionsEnabled(block.Height) {
 					extendedCommit := blockStore.LoadBlockExtendedCommit(lastBlockHeight)
@@ -99,6 +111,8 @@ func MigrateToRollkitCmd() *cobra.Command {
 
 					rollkitStore.SaveExtendedCommit(context.Background(), header.Height(), &extendedCommitInfo)
 				}
+
+				fmt.Println("Block", height, "migrated")
 			}
 
 			log.Println("Migration completed successfully")
