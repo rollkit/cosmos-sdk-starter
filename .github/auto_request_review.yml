@@ -7,12 +7,10 @@ reviewers:
       - tzdybal
       - gupadhyaya
       - tuxcanfly
-      - MSevey
 files:
   "**":
     - rollkit
   ".github/**":
-    - MSevey
     - rollkit
 options:
   ignore_draft: true
