@@ -5,7 +5,7 @@ go 1.23.3
 require (
 	github.com/cometbft/cometbft v0.38.15
 	github.com/cosmos/cosmos-sdk v0.50.10
-	github.com/hashicorp/go-metrics v0.5.3
+	github.com/hashicorp/go-metrics v0.5.4
 	github.com/rollkit/rollkit v0.14.1
 	golang.org/x/sync v0.10.0
 	google.golang.org/grpc v1.67.1
